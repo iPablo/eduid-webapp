@@ -31,34 +31,5 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-from marshmallow import Schema, fields
-from eduid_common.api.schemas.base import FluxStandardAction, EduidSchema
-from eduid_webapp.personal_data.validators import validate_language
-
-__author__ = 'eperez'
-
-
-class PersonalDataSchema(EduidSchema):
-
-    given_name = fields.String(required=True)
-    surname = fields.String(required=True)
-    display_name = fields.String(required=True)
-    language = fields.String(required=True, validate=validate_language)
-
-
-class PersonalDataResponseSchema(FluxStandardAction):
-
-    payload = PersonalDataSchema()
-
-
-class EmailSchema(EduidSchema):
-    # XXX add list to PersonalData schema
-
-    email = fields.String(required=True)
-    confirmed = fields.Boolean(default=False)
-    primary = fields.Boolean(default=False)
-
-
-class EmailResponseSchema(FluxStandardAction):
-
-    payload = EmailSchema()
+from .user_data import pd_views
+from .emails import email_views

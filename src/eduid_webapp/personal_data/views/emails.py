@@ -31,34 +31,41 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-from marshmallow import Schema, fields
-from eduid_common.api.schemas.base import FluxStandardAction, EduidSchema
-from eduid_webapp.personal_data.validators import validate_language
+from __future__ import absolute_import
 
-__author__ = 'eperez'
+from flask import Blueprint
 
+from eduid_userdb.exceptions import UserOutOfSync
+from eduid_userdb.mail import MailAddress
+from eduid_common.api.decorators import require_dashboard_user, MarshalWith, UnmarshalWith
+from eduid_common.api.utils import save_dashboard_user
+from eduid_webapp.personal_data.schemas import EmailSchema, EmailResponseSchema
 
-class PersonalDataSchema(EduidSchema):
-
-    given_name = fields.String(required=True)
-    surname = fields.String(required=True)
-    display_name = fields.String(required=True)
-    language = fields.String(required=True, validate=validate_language)
+email_views = Blueprint('email', __name__, url_prefix='email')
 
 
-class PersonalDataResponseSchema(FluxStandardAction):
-
-    payload = PersonalDataSchema()
-
-
-class EmailSchema(EduidSchema):
-    # XXX add list to PersonalData schema
-
-    email = fields.String(required=True)
-    confirmed = fields.Boolean(default=False)
-    primary = fields.Boolean(default=False)
+@email_views.route('/all', methods=['GET'])
+@MarshalWith(EmailResponseSchema)
+@require_dashboard_user
+def get_all_emails(user):
+    return EmailSchema(many=True).dump(user.mail_addresses).data
 
 
-class EmailResponseSchema(FluxStandardAction):
+@mail_views.route('/new', methods=['POST'])
+@UnmarshalWith(EmailSchema)
+@MarshalWith(EmailResponseSchema)
+@require_dashboard_user
+def post_email(user, email, confirmed, primary):
+    # XXX validate not in another user, steal
+    # XXX create and store verification code, send it
+    new_mail = MailAddress(email=email)
+    user.mail_addresses.add(new_mail)
+    try:
+        save_dashboard_user(user)
+    except UserOutOfSync:
+        return {
+            '_status': 'error',
+            'error': {'form': 'user-out-of-sync'}
+        }
+    return EmailSchema().dump(new_mail).data
 
-    payload = EmailSchema()
