@@ -56,9 +56,9 @@ def get_all_emails(user):
 @MarshalWith(EmailResponseSchema)
 @require_dashboard_user
 def post_email(user, email, confirmed, primary):
-    # XXX validate not in another user, steal
     # XXX create and store verification code, send it
-    new_mail = MailAddress(email=email)
+    new_mail = MailAddress(email=email, application='dashboard',
+                           verified=False, primary=False)
     user.mail_addresses.add(new_mail)
     try:
         save_dashboard_user(user)
@@ -69,3 +69,10 @@ def post_email(user, email, confirmed, primary):
         }
     return EmailSchema().dump(new_mail).data
 
+
+@mail_views.route('/primary', methods=['POST'])
+@UnmarshalWith(EmailSchema)
+@MarshalWith(EmailResponseSchema)
+@require_dashboard_user
+def post_primary(user, email, confirmed, primary):
+    pass
