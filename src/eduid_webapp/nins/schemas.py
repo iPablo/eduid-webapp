@@ -31,4 +31,17 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
+from eduid_common.api.schemas.base import EduidSchema
 from marshmallow import fields
+
+
+class NinsSchema(EduidSchema):
+
+    code = fields.string(required=True)
+    csrf_token = fields.String(required=True)
+
+
+class CodeSchema(EduidSchema):
+
+    code = fields.string(required=True)
+    csrf_token = fields.String(required=True)

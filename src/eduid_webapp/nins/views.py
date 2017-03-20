@@ -32,6 +32,129 @@
 #
 from __future__ import absolute_import
 
-from flask import Blueprint, session, abort
+from flask import Blueprint, session, abort, current_app
+
+from eduid_common.api.decorators import require_dashboard_user, MarshalWith, UnmarshalWith
+from eduid_webapp.nins.schemas import NinsSchema, CodeSchema
 
 nins_views = Blueprint('nins', __name__, url_prefix='', template_folder='templates')
+
+
+@nins_views.route('/all', methods=['GET'])
+@MarshalWith(NinsSchema)
+@require_dashboard_user
+def get_nins(user, csrf_token):
+    '''
+    View to get nin for the logged user
+
+    If the user has verified or is in the process of verify returns his nin
+    '''
+    if session.get_csrf_token() != csrf_token:
+        abort(400)
+
+    current_app.logger.debug('Trying to get nin for user {!r}'.format(user))
+
+    # TODO: logic
+    code = '199002020202'
+    current_app.logger.info('the user {!r} has nin {!r}'.format(user, code))
+    current_app.statsd.count(name='nins_get_nin', value=1)
+
+    return code
+
+
+@nins_views.route('/verify_letter', methods=['POST'])
+@UnmarshalWith(NinsSchema)
+@MarshalWith(NinsSchema)
+@require_dashboard_user
+def verify_letter(user, code, csrf_token):
+    '''
+    View to verify identity using a physical letter
+
+    Return 200 if nin is valid
+    '''
+    if session.get_csrf_token() != csrf_token:
+        abort(400)
+
+    current_app.logger.debug('Trying to verify nin {!r} '
+                             'for user {!r} using physical letter'.format(code, user))
+
+    # TODO: logic
+    current_app.logger.info('sending letter to nin {!r} '
+                            'for user {!r}'.format(code, user))
+    current_app.statsd.count(name='nins_sended_letter', value=1)
+
+    return 200
+
+
+@nins_views.route('/verify_phone', methods=['POST'])
+@UnmarshalWith(NinsSchema)
+@MarshalWith(NinsSchema)
+@require_dashboard_user
+def verify_phone(user, code, csrf_token):
+    '''
+    View to verify identity using a mobile phone
+
+    Return 200 if nin is valid
+    '''
+    if session.get_csrf_token() != csrf_token:
+        abort(400)
+
+    current_app.logger.debug('Trying to verify nin {!r} '
+                             'for user {!r} using mobile'.format(code, user))
+
+    # TODO: logic
+    number = '+34670123123'
+    current_app.logger.info('sending sms to nin {!r} '
+                            'for user {!r} with number {!r}'.format(code, user, number))
+    current_app.statsd.count(name='nins_sended_sms', value=1)
+
+    return 200
+
+
+@nins_views.route('/verify_letter', methods=['POST'])
+@UnmarshalWith(CodeSchema)
+@MarshalWith(CodeSchema)
+@require_dashboard_user
+def confirm_letter(user, code, csrf_token):
+    '''
+    View to confirm identity using a physical letter
+
+    Return 200 if is verified
+    '''
+    if session.get_csrf_token() != csrf_token:
+        abort(400)
+
+    current_app.logger.debug('Trying to confirm nin {!r} '
+                             'for user {!r} using physical letter'.format(code, user))
+
+    # TODO: logic
+    current_app.logger.info('confirmed nin {!r} '
+                            'for user {!r}'.format(code, user))
+    current_app.statsd.count(name='nins_confirmed_letter', value=1)
+
+    return 200
+
+
+@nins_views.route('/verify_phone', methods=['POST'])
+@UnmarshalWith(CodeSchema)
+@MarshalWith(CodeSchema)
+@require_dashboard_user
+def confirm_phone(user, code, csrf_token):
+    '''
+    View to confirm identity using a mobile phone
+
+    Return 200 if is verified
+    '''
+    if session.get_csrf_token() != csrf_token:
+        abort(400)
+
+    current_app.logger.debug('Trying to confirm nin {!r} '
+                             'for user {!r} using mobile'.format(code, user))
+
+    # TODO: logic
+    number = '+34670123123'
+    current_app.logger.info('confirmed sms {!r} '
+                            'for user {!r} with number {!r}'.format(code, user, number))
+    current_app.statsd.count(name='nins_confirmed_mobile', value=1)
+
+    return 200
